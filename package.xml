@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package>
+  <name>ur10_armsim</name>
+  <version>0.0.0</version>
+  <description>A simple robot simulator for the UR10 robot arm</description>
+
+  <maintainer email="ecorbe@gmail.com">Ernesto Corbellini</maintainer>
+
+  <license>TODO</license>
+
+  <run_depend>rospy</run_depend>
+  <run_depend>numpy</run_depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

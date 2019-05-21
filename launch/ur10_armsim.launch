@@ -1,0 +1,6 @@
+<launch>
+
+  <rosparam command="load" file="$(find ur10_armsim)/config/ur10_dh.yaml" />
+  <node name="arm_sim" pkg="ur10_armsim" type="armsim.py" output="screen" />
+  
+</launch>
