@@ -1,0 +1,8 @@
+# Define the goal
+float32[6] target_angles
+---
+# Define the result
+float32[6] final_angles
+---
+# Define a feedback message
+geometry_msgs/PoseStamped pose

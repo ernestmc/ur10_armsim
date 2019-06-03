@@ -3,9 +3,11 @@
 from utils import *
 import numpy as np
 import rospy
+import actionlib
 import tf2_ros
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, Pose
 import tf.transformations as transform
+from ur10_armsim.msg import JointTargetAction, JointTargetActionResult
 
 
 class ArmSim(object):
@@ -17,23 +19,37 @@ class ArmSim(object):
         self.link_names = ["world"] + rospy.get_param("link_names", [])
         self.max_speeds = rospy.get_param("link_max_speeds", [])
         self.initial_state = rospy.get_param("link_initial", [])
+        self.angles = self.initial_state
+        self.kp = 0.02
+        self.tolerance = 0.001
         self.rate = rospy.Rate(50)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
+        self.action_server = actionlib.SimpleActionServer("/joint_target", JointTargetAction, self.joint_target_cb, False)
+        self.action_server.start()
+
+    def joint_target_cb(self, goal):
+        print "Received goal"
+        print goal
+        self.goto_joint_target(list(goal.target_angles))
+        result = JointTargetActionResult()
+        self.action_server.set_succeeded(result)
+        print "Ended with result"
+        print result
 
     def run(self):
-        #target_angles = (np.random.rand(6) - 0.5) * np.pi * 2
-        target_angles = [np.pi, 0, 0, 0, 0,0]
-        angles = self.initial_state
-        k = 0.02
-        tol = 0.001
-        while not rospy.is_shutdown():
+        target_angles = [np.pi, 0, 0, 0, 0, 0]
+        #self.goto_joint_target(target_angles)
+
+    def goto_joint_target(self, target_angles):
+        max_diff = np.inf
+        while not rospy.is_shutdown() and max_diff > self.tolerance:
             time_diff = (rospy.Time.now() - self.rate.last_time + self.rate.remaining()).to_sec()
-            print "time diff: %s" % time_diff
-            for a in range(len(angles)):
-                angles[a] += self.angular_control(angles[a], target_angles[a], self.max_speeds[a], time_diff, k, tol)
-            print target_angles
-            print angles
-            self.update_links(angles)
+            for a in range(len(self.angles)):
+                self.angles[a] += self.angular_control(self.angles[a], target_angles[a], self.max_speeds[a], time_diff,
+                                                       self.kp, self.tolerance)
+            self.update_links(self.angles)
+            max_diff = np.max(abs(np.array(self.angles) - target_angles))
+            print max_diff
             self.rate.sleep()
 
     def angular_control(self, current_angle, target_angle, max_speed, time_delta, p_const, tolerance):
@@ -88,6 +104,20 @@ class ArmSim(object):
             msg.child_frame_id = self.link_names[link + 1]
             self.tf_broadcaster.sendTransform(msg)
 
+    def get_tcp_pose(self, angles):
+        """
+        Calculate the position and orientation of the tool end point from the given joint angles
+        @return: a Pose message
+        """
+        link_mat = np.identity(4)
+        for link in range(len(angles)):
+            link_mat = np.matmul(link_mat, self.get_link_transform(self.dh_links[link], angles[link]))
+        pose = Pose()
+        tf = self.tf_from_matrix(link_mat)
+        pose.position = tf.transform.translation
+        pose.orientation = tf.transform.rotation
+        return pose
+
     def tf_from_matrix(self, transform_mat):
         """
         Returns a tf message from the transformation matrix
@@ -111,3 +141,4 @@ if __name__ == '__main__':
   rospy.init_node("arm_sim")
   node = ArmSim()
   node.run()
+  rospy.spin()

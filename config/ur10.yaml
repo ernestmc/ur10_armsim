@@ -9,7 +9,7 @@ link_max_speeds: [2.0944, 2.0944, 3.1416, 3.1416, 3.1416, 3.1416]
 
 # Links initial position
 # joint angles in radians in the range [-pi, pi)
-link_initial: [0.7854, 0, 0, 0, 0]
+link_initial: [0, 0, 0, 0, 0, 0]
 
 # Denavit-Hartenberg parameters for each link
 # theta (z angle), d (z translation), a (x translation), alpha (x angle)
