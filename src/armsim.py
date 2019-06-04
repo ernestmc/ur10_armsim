@@ -5,9 +5,9 @@ import numpy as np
 import rospy
 import actionlib
 import tf2_ros
-from geometry_msgs.msg import TransformStamped, Pose
+from geometry_msgs.msg import TransformStamped, Pose, PoseStamped
 import tf.transformations as transform
-from ur10_armsim.msg import JointTargetAction, JointTargetActionResult
+from ur10_armsim.msg import JointTargetAction, JointTargetResult, JointTargetFeedback
 
 
 class ArmSim(object):
@@ -23,22 +23,23 @@ class ArmSim(object):
         self.kp = 0.02
         self.tolerance = 0.001
         self.rate = rospy.Rate(50)
+        self.pub_tcp_pose = rospy.Publisher("/tcp_pose", PoseStamped, queue_size=10)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.action_server = actionlib.SimpleActionServer("/joint_target", JointTargetAction, self.joint_target_cb, False)
         self.action_server.start()
 
     def joint_target_cb(self, goal):
-        print "Received goal"
-        print goal
+        print "Received goal %s" % goal
         self.goto_joint_target(list(goal.target_angles))
-        result = JointTargetActionResult()
+        result = JointTargetResult()
+        result.final_angles = self.angles
         self.action_server.set_succeeded(result)
-        print "Ended with result"
-        print result
+        print "Ended with result %s" % result
 
     def run(self):
-        target_angles = [np.pi, 0, 0, 0, 0, 0]
-        #self.goto_joint_target(target_angles)
+        while (not rospy.is_shutdown()):
+            self.update_links(self.angles)
+            self.rate.sleep()
 
     def goto_joint_target(self, target_angles):
         max_diff = np.inf
@@ -48,8 +49,11 @@ class ArmSim(object):
                 self.angles[a] += self.angular_control(self.angles[a], target_angles[a], self.max_speeds[a], time_diff,
                                                        self.kp, self.tolerance)
             self.update_links(self.angles)
+            feedback = JointTargetFeedback()
+            feedback.pose = PoseStamped()
+            feedback.pose.pose = self.get_tcp_pose(self.angles)
+            self.action_server.publish_feedback(feedback)
             max_diff = np.max(abs(np.array(self.angles) - target_angles))
-            print max_diff
             self.rate.sleep()
 
     def angular_control(self, current_angle, target_angle, max_speed, time_delta, p_const, tolerance):
@@ -69,7 +73,6 @@ class ArmSim(object):
             max_increment = abs(max_speed * time_delta)
             if abs(increment) > max_increment:
                 # clip the increment according to the maximum speed
-                print "*** LIMITING SPEED *** %s" % increment
                 increment = np.sign(increment) * max_increment
         else:
             increment = 0
@@ -103,6 +106,11 @@ class ArmSim(object):
             msg.header.frame_id = self.link_names[link]
             msg.child_frame_id = self.link_names[link + 1]
             self.tf_broadcaster.sendTransform(msg)
+        pose = PoseStamped()
+        pose.header.frame_id = self.link_names[0]
+        pose.header.stamp = rospy.Time.now()
+        pose.pose = self.get_tcp_pose(angles)
+        self.pub_tcp_pose.publish(pose)
 
     def get_tcp_pose(self, angles):
         """
@@ -141,4 +149,3 @@ if __name__ == '__main__':
   rospy.init_node("arm_sim")
   node = ArmSim()
   node.run()
-  rospy.spin()

@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /TCP_Pose1
       Splitter Ratio: 0.5
     Tree Height: 435
   - Class: rviz/Selection
@@ -83,6 +84,21 @@ Visualization Manager:
                       {}
       Update Interval: 0
       Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.100000001
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.300000012
+      Head Radius: 0.100000001
+      Name: TCP_Pose
+      Shaft Length: 1
+      Shaft Radius: 0.0500000007
+      Shape: Arrow
+      Topic: /tcp_pose
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -108,7 +124,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.711483
+      Distance: 4.15822601
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -123,10 +139,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.425399065
+      Pitch: 0.344797224
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.74857903
+      Yaw: 3.10356617
     Saved: ~
 Window Geometry:
   Displays:
