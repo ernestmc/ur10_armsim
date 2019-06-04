@@ -1,7 +1,7 @@
 # Robot arm configuration
 
 # Link names
-link_names: ["base", "shoulder", "elbow", "wrist_1", "wrist_2", "wrist_3"]
+link_names: ["base", "shoulder", "elbow", "wrist_1", "wrist_2", "tcp"]
 
 # Links maximum speeds
 # maximum angular speeds in radians per second

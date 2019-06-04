@@ -1,0 +1,13 @@
+# Define the goal
+geometry_msgs/Point start
+geometry_msgs/Point end
+# speed in meters per second
+float32 speed
+---
+# Define the result
+geometry_msgs/Point final_position
+---
+# Define a feedback message
+geometry_msgs/Point world_pos
+geometry_msgs/Point tcp_pos
+float32 distance_to_tcp

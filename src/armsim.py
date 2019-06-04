@@ -29,12 +29,20 @@ class ArmSim(object):
         self.action_server.start()
 
     def joint_target_cb(self, goal):
-        print "Received goal %s" % goal
+        print "Received joint goal %s" % goal
         self.goto_joint_target(list(goal.target_angles))
         result = JointTargetResult()
         result.final_angles = self.angles
         self.action_server.set_succeeded(result)
-        print "Ended with result %s" % result
+        print "Ended joint move with result %s" % result
+        print "tcp frame"
+        t = self.get_tcp_transform(self.angles)
+        ti = np.linalg.inv(t)
+        pos = self.get_tcp_pose(self.angles).position
+        p = [pos.x, pos.y, pos.z, 1]
+        p_tcp = np.matmul(ti, p)
+        print p
+        print p_tcp
 
     def run(self):
         while (not rospy.is_shutdown()):
@@ -112,16 +120,25 @@ class ArmSim(object):
         pose.pose = self.get_tcp_pose(angles)
         self.pub_tcp_pose.publish(pose)
 
+    def get_tcp_transform(self, angles):
+        """
+        Calculate the transformation for the tool end
+        @param angles: joint angles
+        @return: a 4x4 transformation matrix
+        """
+        tcp_mat = np.identity(4)
+        for link in range(len(angles)):
+            tcp_mat = np.matmul(tcp_mat, self.get_link_transform(self.dh_links[link], angles[link]))
+        return tcp_mat
+
     def get_tcp_pose(self, angles):
         """
         Calculate the position and orientation of the tool end point from the given joint angles
         @return: a Pose message
         """
-        link_mat = np.identity(4)
-        for link in range(len(angles)):
-            link_mat = np.matmul(link_mat, self.get_link_transform(self.dh_links[link], angles[link]))
+        tcp_mat = self.get_tcp_transform(angles)
         pose = Pose()
-        tf = self.tf_from_matrix(link_mat)
+        tf = self.tf_from_matrix(tcp_mat)
         pose.position = tf.transform.translation
         pose.orientation = tf.transform.rotation
         return pose

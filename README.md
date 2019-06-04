@@ -40,3 +40,32 @@ goal:
 The position of the TCP will be published as a feedback message and also under the `/tcp_pose` and showed in Rviz.
 When the move finishes, a result message will be published under the `/joint_target/result` topic indicating the final angular positions reached.
 
+
+## Flying ball
+
+A flying ball is simulated and showed in Rviz. The ball has it's own action node whiche you can use to send start and end points and the speed for the movement. For example:
+```
+rostopic pub -1 /ball/goal ur10_armsim/FlyBallActionGoal "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+goal_id:
+  stamp:
+    secs: 0
+    nsecs: 0
+  id: ''
+goal:
+  start:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  end:
+    x: -1.0
+    y: 0.0
+    z: 0.3
+  speed: 0.3" 
+```
+You can see the ball position in the tcp frame and the distance to the tcp in the feedback topic while the ball is moving.
+The position of the ball in world frame is published in the `/ball/world_pos` topic.

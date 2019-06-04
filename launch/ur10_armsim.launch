@@ -2,6 +2,7 @@
 
   <rosparam command="load" file="$(find ur10_armsim)/config/ur10.yaml" />
   <node name="arm_sim" pkg="ur10_armsim" type="armsim.py" output="screen" />
+  <node name="ball" pkg="ur10_armsim" type="ball.py" output="screen" />
   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ur10_armsim)/config/ur10_sim.rviz" />
   
 </launch>
